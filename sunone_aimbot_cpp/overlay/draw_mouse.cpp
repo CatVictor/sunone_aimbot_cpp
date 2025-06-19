@@ -321,7 +321,7 @@ void draw_mouse()
     }
 
     ImGui::SeparatorText("Input method");
-    std::vector<std::string> input_methods = { "WIN32", "GHUB", "ARDUINO", "KMBOX_B", "KMBOX_NET"};
+    std::vector<std::string> input_methods = { "WIN32", "GHUB", "ARDUINO", "KMBOX_B", "KMBOX_NET", "VIGEM"};
 
     std::vector<const char*> method_items;
     method_items.reserve(input_methods.size());
@@ -579,6 +579,14 @@ void draw_mouse()
                 kmboxNetSerial->lcdColor(0);
                 kmboxNetSerial->lcdPicture(gImage_128x160);
             }
+        }
+    }
+    else if (config.input_method == "VIGEM")
+    {
+        ImGui::Text("Using ViGEm controller input.");
+        if (globalMouseThread)
+        {
+            // Nothing configurable for now
         }
     }
 

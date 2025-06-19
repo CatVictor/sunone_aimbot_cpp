@@ -28,7 +28,8 @@ MouseThread::MouseThread(
     SerialConnection* serialConnection,
     GhubMouse* gHubMouse,
     Kmbox_b_Connection* kmboxConnection,
-    KmboxNetConnection* Kmbox_Net_Connection)
+    KmboxNetConnection* Kmbox_Net_Connection,
+    VigemController* vigemController)
     : screen_width(resolution),
     screen_height(resolution),
     prediction_interval(predictionInterval),
@@ -45,6 +46,7 @@ MouseThread::MouseThread(
     kmbox(kmboxConnection),
     kmbox_net(Kmbox_Net_Connection),
     gHub(gHubMouse),
+    vigem(vigemController),
 
     prev_velocity_x(0.0),
     prev_velocity_y(0.0),
@@ -245,6 +247,10 @@ void MouseThread::sendMovementToDriver(int dx, int dy)
     {
         gHub->mouse_xy(dx, dy);
     }
+    else if (vigem)
+    {
+        vigem->move(dx, dy);
+    }
     else
     {
         INPUT in{ 0 };
@@ -377,17 +383,21 @@ void MouseThread::pressMouse(const AimbotTarget& target)
         {
             kmbox_net->keyDown(0);
         }
-        else if (serial)
-        {
-            serial->press();
-        }
-        else if (gHub)
-        {
-            gHub->mouse_down();
-        }
-        else
-        {
-            INPUT input = { 0 };
+    else if (serial)
+    {
+        serial->press();
+    }
+    else if (gHub)
+    {
+        gHub->mouse_down();
+    }
+    else if (vigem)
+    {
+        vigem->press(0);
+    }
+    else
+    {
+        INPUT input = { 0 };
             input.type = INPUT_MOUSE;
             input.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
             SendInput(1, &input, sizeof(INPUT));
@@ -404,14 +414,18 @@ void MouseThread::pressMouse(const AimbotTarget& target)
         {
             kmbox_net->keyUp(0);
         }
-        else if (serial)
-        {
-            serial->release();
-        }
-        else if (gHub)
-        {
-            gHub->mouse_up();
-        }
+    else if (serial)
+    {
+        serial->release();
+    }
+    else if (gHub)
+    {
+        gHub->mouse_up();
+    }
+    else if (vigem)
+    {
+        vigem->release(0);
+    }
         else
         {
             INPUT input = { 0 };
@@ -444,6 +458,10 @@ void MouseThread::releaseMouse()
         else if (gHub)
         {
             gHub->mouse_up();
+        }
+        else if (vigem)
+        {
+            vigem->release(0);
         }
         else
         {
@@ -549,4 +567,10 @@ void MouseThread::setGHubMouse(GhubMouse* newGHub)
 {
     std::lock_guard<std::mutex> lock(input_method_mutex);
     gHub = newGHub;
+}
+
+void MouseThread::setVigemController(VigemController* newVigem)
+{
+    std::lock_guard<std::mutex> lock(input_method_mutex);
+    vigem = newVigem;
 }
