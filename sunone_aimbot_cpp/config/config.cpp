@@ -458,7 +458,7 @@ bool Config::saveConfig(const std::string& filename)
         << std::fixed << std::setprecision(1)
         << "easynorecoilstrength = " << easynorecoilstrength << "\n"
 
-        << "# WIN32, GHUB, ARDUINO, KMBOX_B, KMBOX_NET\n"
+        << "# WIN32, GHUB, ARDUINO, KMBOX_B, KMBOX_NET, VIGEM\n"
         << "input_method = " << input_method << "\n\n";
 
     // Wind mouse

@@ -15,6 +15,7 @@
 #include "keyboard_listener.h"
 #include "overlay.h"
 #include "ghub.h"
+#include "VigemController.h"
 #include "other_tools.h"
 #include "virtual_camera.h"
 
@@ -36,6 +37,7 @@ GhubMouse* gHub = nullptr;
 SerialConnection* arduinoSerial = nullptr;
 Kmbox_b_Connection* kmboxSerial = nullptr;
 KmboxNetConnection* kmboxNetSerial = nullptr;
+VigemController* vigemController = nullptr;
 
 std::atomic<bool> detection_resolution_changed(false);
 std::atomic<bool> capture_method_changed(false);
@@ -76,6 +78,11 @@ void createInputDevices()
         delete kmboxNetSerial;
         kmboxNetSerial = nullptr;
     }
+    if (vigemController)
+    {
+        delete vigemController;
+        vigemController = nullptr;
+    }
 
     if (config.input_method == "ARDUINO")
     {
@@ -114,6 +121,16 @@ void createInputDevices()
             delete kmboxNetSerial; kmboxNetSerial = nullptr;
         }
     }
+    else if (config.input_method == "VIGEM")
+    {
+        std::cout << "[Mouse] Using ViGEm input." << std::endl;
+        vigemController = new VigemController();
+        if (!vigemController->isOpen())
+        {
+            delete vigemController; vigemController = nullptr;
+            std::cerr << "[ViGEm] Failed to init." << std::endl;
+        }
+    }
     else
     {
         std::cout << "[Mouse] Using default Win32 method input." << std::endl;
@@ -128,6 +145,7 @@ void assignInputDevices()
         globalMouseThread->setGHubMouse(gHub);
         globalMouseThread->setKmboxConnection(kmboxSerial);
         globalMouseThread->setKmboxNetConnection(kmboxNetSerial);
+        globalMouseThread->setVigemController(vigemController);
     }
 }
 
@@ -153,6 +171,10 @@ void handleEasyNoRecoil(MouseThread& mouseThread)
         else if (kmboxNetSerial)
         {
             kmboxNetSerial->move(0, recoil_compensation);
+        }
+        else if (vigemController)
+        {
+            vigemController->move(0, recoil_compensation);
         }
         else
         {
@@ -366,7 +388,8 @@ int main()
             arduinoSerial,
             gHub,
             kmboxSerial,
-            kmboxNetSerial
+            kmboxNetSerial,
+            vigemController
         );
 
         globalMouseThread = &mouseThread;
